@@ -1,7 +1,6 @@
 pico-8 cartridge // http://www.pico-8.com
 version 36
 __lua__
-piece = flr(rnd(7))
 poke(0x5f2e,1)
 kick_table = {
 	--['1+'] = {{-1,0},{-1,1},{0,-2},{-1,-2}},
@@ -133,14 +132,6 @@ end
 for x = 1, 10 do 
 	collision_field[21][x] = 8
 end
---[[
-for y=1,22 do                    
-	collision_field[x] = {}               
- for x=11,14 do                   
-  collision_field[x][y] = 1         
- end
-end
-]]--
 piece_pointer = srs_i
 function smap(spritenum,x,y)
 	--if spritenum == 0 then spritenum = 9 end
@@ -270,22 +261,8 @@ function merge()
 	line_detect()
 	posx=5
 	posy=0
-	piece = flr(rnd(7))
-	if piece == 0 then
-		piece_pointer = srs_i
-	elseif piece == 1 then
-		piece_pointer = srs_j
-	elseif piece == 2 then
-		piece_pointer = srs_l
-	elseif piece == 3 then
-		piece_pointer = srs_s
-	elseif piece == 4 then
-		piece_pointer = srs_o
-	elseif piece == 5 then
-		piece_pointer = srs_t
-	elseif piece == 6 then 
-		piece_pointer = srs_z
-	end
+	piece = ceil(rnd(7))
+	piece_pointer = piece_table[piece]
 end
 LinesToClear = {}
 LinesCleared = 0
@@ -331,7 +308,6 @@ function clearline(n)
 end
 print_val = ""
 function _init()
-	--drop()
 	pal(1,12,1)
 	pal(2,10,1)
 	pal(3,14,1)
@@ -344,21 +320,17 @@ function _init()
 	pal(10,1,1)
 	pal(11,137,1)
 	pal(12,5,1)
-	if piece == 0 then
-		piece_pointer = srs_i
-	elseif piece == 1 then
-		piece_pointer = srs_j
-	elseif piece == 2 then
-		piece_pointer = srs_l
-	elseif piece == 3 then
-		piece_pointer = srs_s
-	elseif piece == 4 then
-		piece_pointer = srs_o
-	elseif piece == 5 then
-		piece_pointer = srs_t
-	elseif piece == 6 then 
-		piece_pointer = srs_z
-	end
+	piece = ceil(rnd(7))
+	piece_table = {
+		[1] = srs_i,
+		[2] = srs_j,
+		[3] = srs_l,
+		[4] = srs_o,
+		[5] = srs_s,
+		[6] = srs_t,
+		[7] = srs_z
+		}
+	piece_pointer = piece_table[piece]
 end
 bms = 3
 brms = 10
