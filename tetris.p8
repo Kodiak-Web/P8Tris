@@ -1,18 +1,8 @@
 pico-8 cartridge // http://www.pico-8.com
 version 36
 __lua__
-piece = flr(rnd(7)) 
-pal(1,12,1)
-pal(2,10,1)
-pal(3,14,1)
-pal(4,138,1)
-pal(5,8,1)
-pal(6,140,1)
-pal(7,9,1)
-pal(8,136,1)
-pal(9,139,1)
-pal(10,1,1)
-pal(11,137,1)
+piece = flr(rnd(7))
+poke(0x5f2e,1)
 kick_table = {
 	--['1+'] = {{-1,0},{-1,1},{0,-2},{-1,-2}},
 	[1] = { {{1,0},{1,1},{0,-2},{1,-2}} , {{-1,0},{-1,1},{0,-2},{-1,-2}} },
@@ -61,85 +51,70 @@ srs_j = {
 	 {2,2,0}} ----
 }
 srs_l = {
-{{0,0,3},
- {3,3,3},
- {0,0,0}},----
-{{0,3,0},
- {0,3,0},
- {0,3,3}},----
-{{0,0,0},
- {3,3,3},
- {3,0,0}},
-{{3,3,0},
- {0,3,0},
- {0,3,0}}
+	{{0,0,3},
+	 {3,3,3},
+	 {0,0,0}},----
+	{{0,3,0},
+	 {0,3,0},
+	 {0,3,3}},----
+	{{0,0,0},
+	 {3,3,3},
+	 {3,0,0}},
+	{{3,3,0},
+	 {0,3,0},
+	 {0,3,0}}
 }
 srs_o = {
-{{0,4,4,0},
- {0,4,4,0}},
-{{0,4,4,0},
- {0,4,4,0}},
-{{0,4,4,0},
- {0,4,4,0}},
-{{0,4,4,0},
- {0,4,4,0}},
+	{{0,4,4,0},
+	 {0,4,4,0}},
+	{{0,4,4,0},
+	 {0,4,4,0}},
+	{{0,4,4,0},
+	 {0,4,4,0}},
+	{{0,4,4,0},
+	 {0,4,4,0}},
 }
 srs_s = {
-{{0,5,5},
- {5,5,0},
- {0,0,0}},
-{{0,5,0},
- {0,5,5},
- {0,0,5}},
-{{0,0,0},
- {0,5,5},
- {5,5,0}},
-{{5,0,0},
- {5,5,0},
- {0,5,0}}
+	{{0,5,5},
+	 {5,5,0},
+	 {0,0,0}},
+	{{0,5,0},
+	 {0,5,5},
+	 {0,0,5}},
+	{{0,0,0},
+	 {0,5,5},
+	 {5,5,0}},
+	{{5,0,0},
+	 {5,5,0},
+	 {0,5,0}}
 }
---[[
-srs_j = {
-{{6,6,0},
- {0,6,6},
- {0,0,0}},
-{{0,0,6},
- {0,6,6},
- {0,6,0}},
-{{0,0,0},
- {6,6,0},
- {0,6,6}},
-{{0,6,0},
- {6,6,0},
- {6,0,0}}
-}]]
 srs_t = {
-{{0,6,0},
- {6,6,6},
- {0,0,0}},
-{{0,6,0},
- {0,6,6},
- {0,6,0}},
-{{0,0,0},
- {6,6,6},
- {0,6,0}},
-{{0,6,0},
- {6,6,0},
- {0,6,0}}
-}
-srs_z = {
-{{7,7,0},
- {0,7,7},
- {0,0,0}},
-{{0,0,7},
- {0,7,7},
- {0,7,0}},
-{{0,0,0},
- {7,7,0},
- {0,7,7}},
-{{0,7,0},
- {7,7,0},
- {7,0,0}}
+	{{0,6,0},
+	 {6,6,6},
+	 {0,0,0}},
+	{{0,6,0},
+	 {0,6,6},
+	 {0,6,0}},
+	{{0,0,0},
+	 {6,6,6},
+	 {0,6,0}},
+	{{0,6,0},
+	 {6,6,0},
+	 {0,6,0}}
+	}
+	srs_z = {
+	{{7,7,0},
+	 {0,7,7},
+	 {0,0,0}},
+	{{0,0,7},
+	 {0,7,7},
+	 {0,7,0}},
+	{{0,0,0},
+	 {7,7,0},
+	 {0,7,7}},
+	{{0,7,0},
+	 {7,7,0},
+	 {7,0,0}}
 }
 draw_offset = 34-6 --centers playing field
 collision_field = {}
@@ -168,6 +143,7 @@ end
 ]]--
 piece_pointer = srs_i
 function smap(spritenum,x,y)
+	--if spritenum == 0 then spritenum = 9 end
 	sspr(((spritenum - 1)*6),0,6,6,x+draw_offset,y)      -----------------------------------------------------------
 end
 piece = -69
@@ -178,13 +154,10 @@ timer = 0
 increments = 15
 colliding = false
 function coltest(tx,ty, trot)
-	trot = trot or 0
 	colliding=false
-	ltx = tx
-	lty = ty
 	r = rot_val + trot
-	if r < 1 then r = 4 end
-	if r > 4 then r = 1 end
+	if r == 0 then r = 4 end
+	if r == 5 then r = 1 end
 	for k,v in pairs(piece_pointer[r]) do
 		for kk,vv in pairs(v) do
 			last_k = k --debugging var
@@ -203,7 +176,7 @@ coltimer = 0
 mergetime = 45
 function move(x,y) 
 	colliding=false
-	coltest(x,y)
+	coltest(x,y,0)
 	if colliding == false then
 		posx += x
 		posy += y
@@ -217,19 +190,26 @@ function move(x,y)
 	end
 end
 counter = 0
+bottom = -69
 function drop()
-	while not merged do
-		move(0,1)
-		counter += 1
-		if counter > 22 then
-			counter = 0
-			merged = true
+		i = 1
+		finished = false
+		while not finished do
+			if coltest(0,i,0) or i > 22 then
+				move(0,i-1)
+				merge()
+				finished = true
+			end
+			i += 1
 		end
-	end
+		merged = true
 	merged = false
 	coltimer = mergetime
 	--clearline(1)	
 end
+
+
+
 function rotate(n)
 --	if piece == 0 then
 --	 --I logic
@@ -254,8 +234,9 @@ function rotate(n)
 		else
 			kick_test = 1
 			kicking = true
+			tablepoint = kick_table[rot_val][tablerot]
 			while kicking do
-				collides = coltest(kick_table[rot_val][tablerot][kick_test][1],(kick_table[rot_val][tablerot][kick_test][1] * -1),n)
+				collides = coltest(tablepoint[kick_test][1],(tablepoint[kick_test][2] * -1),n)
 				if collides == false then
 					rot_val += n
 					if rot_val > 4 then
@@ -263,8 +244,8 @@ function rotate(n)
 						elseif rot_val < 1 then
 						rot_val = 4
 					end
-					posx += kick_table[rot_val][tablerot][kick_test][1]
-					posy += (kick_table[rot_val][tablerot][kick_test][1] * -1) 
+					posx += tablepoint[kick_test][1]
+					posy += (tablepoint[kick_test][2] * -1) 
 					kicking = false
 				elseif kick_test < 4 then
 					kick_test +=1
@@ -274,14 +255,6 @@ function rotate(n)
 			end
 		end
 end
-
-
-
-
-
-
-
-
 ------------------------------------------------
 
 function merge()
@@ -316,21 +289,22 @@ function merge()
 end
 LinesToClear = {}
 LinesCleared = 0
+LinesCleared_bak = 0
 function line_detect()
 LinesToClear = {}
 	for k,v in pairs(collision_field) do
 		filled = true
 		for kk = 1, #v-4 do
-			if 0 == v[kk] or 8==v[kk] then
+			if 0 == v[kk] or 8==v[kk] then --detects filled lines. 0 is "empty", 8 is wall.
 				filled=false
 			end
 		end
 		if filled then add(LinesToClear,k) end
 	end
 	while #LinesToClear > 0 do
-	clearline(LinesToClear[#LinesToClear])
-	del(LinesToClear,LinesToClear[#LinesToClear])
-	LinesCleared += 1
+		clearline(LinesToClear[#LinesToClear])
+		del(LinesToClear,LinesToClear[#LinesToClear])
+		LinesCleared += 1
 	end
 end
 line = 0
@@ -355,8 +329,9 @@ function clearline(n)
 		end
 	end
 end
-
+print_val = ""
 function _init()
+	--drop()
 	pal(1,12,1)
 	pal(2,10,1)
 	pal(3,14,1)
@@ -368,6 +343,7 @@ function _init()
 	pal(9,139,1)
 	pal(10,1,1)
 	pal(11,137,1)
+	pal(12,5,1)
 	if piece == 0 then
 		piece_pointer = srs_i
 	elseif piece == 1 then
@@ -434,25 +410,26 @@ function _draw()
 	cls()
 	for k,v in pairs(collision_field) do
 		for key,value in pairs(v) do
+			if value == 0 then value = 9 end
 			smap(value,key*6,k*6)
 		end
 	end
 	for k,v in pairs(piece_pointer[rot_val]) do
 		for kk,vv in pairs(v) do
 			smap(vv,(kk*6)+(posx*6),(k*6)+(posy*6))
-			--print(piece)
 		end
 	end
 	print(stat(2),2)
+	print(rot_val,0,10,2)
 end
 
 __gfx__
-111111666666777777222222444444333333555555a6a6a600000000000000000000000000000000000000000000000000000000000000000000000000000000
-1666616aaaa67bbbb72777724999943888835888856a6a6a00000000000000000000000000000000000000000000000000000000000000000000000000000000
-1611616a66a67b77b7272272494494383383585585a6a6a600000000000000000000000000000000000000000000000000000000000000000000000000000000
-1611616a66a67b77b72722724944943833835855856a6a6a00000000000000000000000000000000000000000000000000000000000000000000000000000000
-1666616aaaa67bbbb7277772499994388883588885a6a6a600000000000000000000000000000000000000000000000000000000000000000000000000000000
-1111116666667777772222224444443333335555556a6a6a00000000000000000000000000000000000000000000000000000000000000000000000000000000
+111111666666777777222222444444333333555555aaaaaaadddda00000000000000000000000000000000000000000000000000000000000000000000000000
+1666616aaaa67bbbb7277772499994388883588885aaaaaacaddda00000000000000000000000000000000000000000000000000000000000000000000000000
+1611616a66a67b77b7272272494494383383585585aaaaaaccadda00000000000000000000000000000000000000000000000000000000000000000000000000
+1611616a66a67b77b7272272494494383383585585aaaaaacccada00000000000000000000000000000000000000000000000000000000000000000000000000
+1666616aaaa67bbbb7277772499994388883588885aaaaaaccccaa00000000000000000000000000000000000000000000000000000000000000000000000000
+111111666666777777222222444444333333555555aaaaaaaaaaaa00000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 01111006000000007000220000440000300005500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
