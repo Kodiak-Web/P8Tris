@@ -202,9 +202,9 @@ end
 
 
 function rotate(n)
---	if piece == 0 then
---	 --I logic
---	else
+	--	if piece == 0 then
+	--	 --I logic
+	--	else
 		not_rotated = true
 		tablerot = nil
 		if n == -1 then tablerot = 1
@@ -264,11 +264,7 @@ function merge()
 	piece = ceil(rnd(7))
 	piece_pointer = piece_table[piece]
 end
-LinesToClear = {}
-LinesCleared = 0
-LinesCleared_bak = 0
 function line_detect()
-LinesToClear = {}
 	for k,v in pairs(collision_field) do
 		filled = true
 		for kk = 1, #v-4 do
@@ -276,12 +272,10 @@ LinesToClear = {}
 				filled=false
 			end
 		end
-		if filled then add(LinesToClear,k) end
-	end
-	while #LinesToClear > 0 do
-		clearline(LinesToClear[#LinesToClear])
-		del(LinesToClear,LinesToClear[#LinesToClear])
-		LinesCleared += 1
+		if filled then 
+			clearline(k) 
+			LinesCleared += 1
+		end
 	end
 end
 line = 0
@@ -308,6 +302,7 @@ function clearline(n)
 end
 print_val = ""
 function _init()
+	LinesCleared = 0
 	pal(1,12,1)
 	pal(2,10,1)
 	pal(3,14,1)
@@ -392,7 +387,7 @@ function _draw()
 		end
 	end
 	print(stat(2),2)
-	print(rot_val,0,10,2)
+	print(LinesCleared,0,10,2)
 end
 
 __gfx__
