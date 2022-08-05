@@ -117,7 +117,7 @@ srs_t = {
 }
 draw_offset = 34-6 --centers playing field
 collision_field = {}
-for y=0,24 do 
+for y=-4,24 do 
 collision_field[y] = {}
 for x= -3,0 do
 	collision_field[y][x] = 8
@@ -259,10 +259,16 @@ function merge()
 		end
 	end
 	line_detect()
-	posx=5
-	posy=0
+	posx=5-ceil((#piece_pointer[rot_val][1])/2)
+	posy=-2
+	rot_val = 1
 	piece = ceil(rnd(7))
 	piece_pointer = piece_table[piece]
+	for k,v in pairs(collision_field[0]) do
+		if v != 0 and v != 8 then
+			stop('you died',8)
+		end
+	end
 end
 function line_detect()
 	for k,v in pairs(collision_field) do
