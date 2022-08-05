@@ -115,6 +115,15 @@ srs_t = {
 	 {7,7,0},
 	 {7,0,0}}
 }
+piece_table = {
+	[1] = srs_i,
+	[2] = srs_j,
+	[3] = srs_l,
+	[4] = srs_o,
+	[5] = srs_s,
+	[6] = srs_t,
+	[7] = srs_z
+	}
 draw_offset = 34-6 --centers playing field
 collision_field = {}
 for y=-4,24 do 
@@ -137,7 +146,6 @@ function smap(spritenum,x,y)
 	--if spritenum == 0 then spritenum = 9 end
 	sspr(((spritenum - 1)*6),0,6,6,x+draw_offset,y)      -----------------------------------------------------------
 end
-piece = -69
 posx = 3
 posy = -1
 rot_val = 1
@@ -249,6 +257,10 @@ end
 ------------------------------------------------
 
 function merge()
+		del(bag,bag[#bag])
+		if #bag==0 then
+			bagjen()
+		end
 	for k,v in pairs(piece_pointer[rot_val]) do
 		for kk,vv in pairs(v) do
 			y = k + posy
@@ -262,13 +274,13 @@ function merge()
 	posx=5-ceil((#piece_pointer[rot_val][1])/2)
 	posy=-2
 	rot_val = 1
-	piece = ceil(rnd(7))
-	piece_pointer = piece_table[piece]
+	--piece_pointer = piece_table[piece]
 	for k,v in pairs(collision_field[0]) do
 		if v != 0 and v != 8 then
 			stop('you died',8)
 		end
 	end
+	piece_pointer = piece_table[bag[#bag]]
 end
 function line_detect()
 	for k,v in pairs(collision_field) do
@@ -306,6 +318,29 @@ function clearline(n)
 		end
 	end
 end
+bag = {}
+basebag = {1,2,3,4,5,6,7}
+buf_val = 0
+piece = -69
+buf_bag = {}
+function bagjen()
+	for k,v in pairs(basebag) do
+		buf_bag[k] = v
+	end
+	bag = {}
+	filled = false
+	i = 1
+	while not filled do
+		buf_val = rnd(buf_bag)
+		bag[i] = buf_val
+		del(buf_bag,buf_val)
+		i += 1
+		if #buf_bag==0 then
+			filled = true
+		end
+	end
+	piece = bag[#bag]
+end
 print_val = ""
 function _init()
 	LinesCleared = 0
@@ -321,17 +356,10 @@ function _init()
 	pal(10,1,1)
 	pal(11,137,1)
 	pal(12,5,1)
-	piece = ceil(rnd(7))
-	piece_table = {
-		[1] = srs_i,
-		[2] = srs_j,
-		[3] = srs_l,
-		[4] = srs_o,
-		[5] = srs_s,
-		[6] = srs_t,
-		[7] = srs_z
-		}
+	--piece = ceil(rnd(7))
+	bagjen()
 	piece_pointer = piece_table[piece]
+
 end
 bms = 3
 brms = 10
@@ -378,9 +406,8 @@ function _update()
 	end 
 	--coltest(0,0)
 end
-
 function _draw()
-	cls()
+	cls(10)
 	for k,v in pairs(collision_field) do
 		for key,value in pairs(v) do
 			if value == 0 then value = 9 end
@@ -392,8 +419,9 @@ function _draw()
 			smap(vv,(kk*6)+(posx*6),(k*6)+(posy*6))
 		end
 	end
-	print(stat(2),2)
-	print(LinesCleared,0,10,2)
+	print('cpu %:' .. flr((100 * stat(2)) + .5),2)
+	print('cLEARS',0,7,2)
+	print(LinesCleared,0,14,2)
 end
 
 __gfx__
