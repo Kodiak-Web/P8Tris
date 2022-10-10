@@ -3,21 +3,15 @@ version 36
 __lua__
 poke(0x5f2e,1)
 kick_table = {
-	--['1+'] = {{-1,0},{-1,1},{0,-2},{-1,-2}},
 	[1] = { {{1,0},{1,1},{0,-2},{1,-2}} , {{-1,0},{-1,1},{0,-2},{-1,-2}} },
-	--['2-'] = {{1,0},{1,-1},{0,2},{1,2}}, 
-	--['2+'] = {{1,0},{1,-1},{0,2},{1,2}},
 	[2] =  {{{1,0},{1,-1},{0,2},{1,2}}},
-	--[3] = {kick_table[1][2],kick_table[1][1]},
-	--['3-'] = {{-1,0},{-1,1},{0,-2},{-1,-2}},
-	--['3+'] = {{1,0},{1,1},{0,-2},{1,-2}},
 	[4] = {{{-1,0},{-1,-1},{0,2},{-1,-2}}}
-	--['1-'] = {{1,0},{1,1},{0,-2},{1,-2}}
-}
+} --TODO: add the I kick table.
 kick_table[2][2] = kick_table[2][1]
 kick_table[3] = {kick_table[1][2],kick_table[1][1]}
 kick_table[4][2] = kick_table[4][1]
-srs_i = {
+held_piece = -1
+srs_i = { --credit to the tetris wiki for stolen SRS tables
 	{{0,0,0,0},
 	 {1,1,1,1},
 	 {0,0,0,0},
@@ -115,8 +109,12 @@ srs_t = {
 	 {7,7,0},
 	 {7,0,0}}
 }
+empty_table = {
+	{{0}}
+}
 piece_table = {
-	[1] = srs_i,
+	[-1] = empty_table,
+	[1] = srs_i, --added for bag support
 	[2] = srs_j,
 	[3] = srs_l,
 	[4] = srs_o,
@@ -126,24 +124,23 @@ piece_table = {
 	}
 draw_offset = 34-6 --centers playing field
 collision_field = {}
-for y=-4,24 do 
-collision_field[y] = {}
-for x= -3,0 do
-	collision_field[y][x] = 8
-end
-for x=1,10 do   
-	collision_field[y][x] = 0
- end
-  for x=11,14 do                   
-  collision_field[y][x] = 8       
- end
+for y=-4,24 do 					-- this for loop the game field. 0 is empty, 8 is out of bounds.
+	collision_field[y] = {}
+	for x= -3,0 do
+		collision_field[y][x] = 8
+	end
+	for x=1,10 do   
+		collision_field[y][x] = 0
+	end
+	for x=11,14 do                   
+		collision_field[y][x] = 8       
+ 	end
 end
 for x = 1, 10 do 
-	collision_field[21][x] = 8
+	collision_field[21][x] = 8 --bottom row is marked out of bounds.
 end
 piece_pointer = srs_i
-function smap(spritenum,x,y)
-	--if spritenum == 0 then spritenum = 9 end
+function smap(spritenum,x,y) --function draws tetris pieces, aligned to game coordinates.
 	sspr(((spritenum - 1)*6),0,6,6,x+draw_offset,y)      -----------------------------------------------------------
 end
 posx = 3
@@ -152,14 +149,14 @@ rot_val = 1
 timer = 0
 increments = 15
 colliding = false
-function coltest(tx,ty, trot)
+function coltest(tx,ty, trot) --self explanatory. returns whether if current piece would collide at a specified location. uses relative positioning.
 	colliding=false
 	r = rot_val + trot
 	if r == 0 then r = 4 end
 	if r == 5 then r = 1 end
 	for k,v in pairs(piece_pointer[r]) do
 		for kk,vv in pairs(v) do
-			last_k = k --debugging var
+			--last_k = k debugging var
 			y = k + posy + ty
 			x = kk+ posx + tx
 			if collision_field[y][x] !=0 and piece_pointer[r][k][kk] !=0 then
@@ -173,7 +170,7 @@ last_x = 0
 last_y = 0
 coltimer = 0
 mergetime = 45
-function move(x,y) 
+function move(x,y) --moves controlled piece. coltests for collision, also uses relative positioning.
 	colliding=false
 	coltest(x,y,0)
 	if colliding == false then
@@ -189,8 +186,8 @@ function move(x,y)
 	end
 end
 counter = 0
-bottom = -69
-function drop()
+bottom = -69 -- :) you found the bottom. nice
+function drop() --moves piece down and spams coltest until it hits something.
 		i = 1
 		finished = false
 		while not finished do
@@ -217,12 +214,8 @@ function rotate(n)
 		tablerot = nil
 		if n == -1 then tablerot = 1
 		elseif n==1 then tablerot=2
-		else 
-			cls()
-			flip()
-			stop("congrations, you managed to break rotations. hey, that rhymes! seriously tho, if you see this pls tell me.",0,0)
-			end
-		coltimer -= flr(increments/1.5)
+		end
+		coltimer -= flr(increments/1.5) --honestly forgot what this was for, i think its used for gravity? TODO: figure out why i did this and fix my shitty gravity implementation
 		if coltest(0,0,n)==false then 
 			rot_val += n
 			if rot_val > 4 then
@@ -256,7 +249,7 @@ function rotate(n)
 end
 ------------------------------------------------
 
-function merge()
+function merge()   --sticks the controlled player piece onto the playing grid
 		del(bag,bag[#bag])
 		if #bag==0 then
 			bagjen()
@@ -276,13 +269,13 @@ function merge()
 	rot_val = 1
 	--piece_pointer = piece_table[piece]
 	for k,v in pairs(collision_field[0]) do
-		if v != 0 and v != 8 then
+		if v != 0 and v != 8 then -- extremely basic game over scenario. will eventually get replaced, maybe
 			stop('you died',8)
 		end
 	end
 	piece_pointer = piece_table[bag[#bag]]
 end
-function line_detect()
+function line_detect() --finds filled lines, commits filled line genocide 
 	for k,v in pairs(collision_field) do
 		filled = true
 		for kk = 1, #v-4 do
@@ -297,7 +290,7 @@ function line_detect()
 	end
 end
 line = 0
-function clearline(n)
+function clearline(n) -- the genocide committing part of line_detect
 	line = n
 	loop1 = true
 	while loop1==true do
@@ -323,7 +316,7 @@ basebag = {1,2,3,4,5,6,7}
 buf_val = 0
 piece = -69
 buf_bag = {}
-function bagjen()
+function bagjen() --every good tetris game needs 7bag support
 	for k,v in pairs(basebag) do
 		buf_bag[k] = v
 	end
@@ -344,7 +337,7 @@ end
 print_val = ""
 function _init()
 	LinesCleared = 0
-	pal(1,12,1)
+	pal(1,12,1) --me want custom palette, a few slots are still open for gui
 	pal(2,10,1)
 	pal(3,14,1)
 	pal(4,138,1)
@@ -356,17 +349,16 @@ function _init()
 	pal(10,1,1)
 	pal(11,137,1)
 	pal(12,5,1)
-	--piece = ceil(rnd(7))
 	bagjen()
 	piece_pointer = piece_table[piece]
 
 end
 bms = 3
 brms = 10
-brmscounter = {0,0,0,0,0}
-bmscounter = {0,0,0,0,0}
-function btna(i)
-	i = i + 1
+brmscounter = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+bmscounter = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+function btna(i)  -- not just using btn() because i want nonstandard button repeat.
+	i = i + 1 --fixes a bug, maybe?
 	pressed = false
 	if btn(i-1) then
 		if brmscounter[i] == 0 then pressed=true end
@@ -379,27 +371,47 @@ function btna(i)
 	return pressed
 end
 dflag = false
-function btnd()
+function btnd() -- hard drops don't need autorepeat.
 	if btn(2) and dflag==false then
 		dtag=true
 		pressed = true
 	elseif not btn(2) and dflag==true then
 		dtag = false
 		pressed = false
-	else if btn(2) and dflag==true then
+	elseif btn(2) and dflag==true then
 		dtag=false
 		pressed = false
-	end end
+	end
 	return pressed
 end
+function hold()
+	debug_var = ""
+	if held_piece == -1 then
+		held_buf = {0,0}
+		held_piece = piece
+		del(bag,bag[#bag])
+		if #bag==0 then
+			bagjen()
+		end
+		piece_pointer = piece_table[bag[#bag]]
+	else
+	held_buf = {bag[#bag], held_piece}
+	bag[#bag] = held_buf[2]
+	held_piece = held_buf[1]
+	piece_pointer = piece_table[bag[#bag]]
+	end
+	--debug_var = piece .. held_buf .. held_piece
+	--end
+end
 function _update()
-	if (btna(0))  move(-1,0)
-	if (btna(1))  move(1,0)
+	if (btna(0)) move(-1,0)
+	if (btna(1)) move(1,0)
 	if (btna(2))  drop()
 	if (btna(3))  move(0,1)
+	if ((btn(4) and btnp(5)) or (btn(5) and btnp(4))) hold()
 	if (btna(4)) rotate(-1)
 	if (btna(5)) rotate(1)
-	if timer < increments - (LinesCleared / 2) then timer += 1 
+	if timer < increments - (LinesCleared / 2) then timer += 1  --extremely basic gravity. not accurate or very fun, may replace with levels later
 	else 
 		move(0,1)
 		timer = 0
@@ -408,15 +420,21 @@ function _update()
 end
 function _draw()
 	cls(10)
-	for k,v in pairs(collision_field) do
+	for k,v in pairs(collision_field) do --iterates through game field to draw
 		for key,value in pairs(v) do
 			if value == 0 then value = 9 end
 			smap(value,key*6,k*6)
 		end
 	end
-	for k,v in pairs(piece_pointer[rot_val]) do
+	for k,v in pairs(piece_pointer[rot_val]) do -- ^ but for held piece instead
 		for kk,vv in pairs(v) do
 			smap(vv,(kk*6)+(posx*6),(k*6)+(posy*6))
+		end
+	end
+	for k,v in pairs(piece_table[held_piece][1]) do -- ^ but for held piece
+
+		for kk,vv in pairs(v) do
+			smap(vv,(kk*6)+(11*6),(k*6)+(3*6))
 		end
 	end
 	print('cpu %:' .. flr((100 * stat(2)) + .5),2)
@@ -425,12 +443,12 @@ function _draw()
 end
 
 __gfx__
-111111666666777777222222444444333333555555aaaaaaadddda00000000000000000000000000000000000000000000000000000000000000000000000000
-1666616aaaa67bbbb7277772499994388883588885aaaaaacaddda00000000000000000000000000000000000000000000000000000000000000000000000000
-1611616a66a67b77b7272272494494383383585585aaaaaaccadda00000000000000000000000000000000000000000000000000000000000000000000000000
-1611616a66a67b77b7272272494494383383585585aaaaaacccada00000000000000000000000000000000000000000000000000000000000000000000000000
-1666616aaaa67bbbb7277772499994388883588885aaaaaaccccaa00000000000000000000000000000000000000000000000000000000000000000000000000
-111111666666777777222222444444333333555555aaaaaaaaaaaa00000000000000000000000000000000000000000000000000000000000000000000000000
+111111666666777777222222444444333333555555aaaaaaacacac00000000000000000000000000000000000000000000000000000000000000000000000000
+1666616aaaa67bbbb7277772499994388883588885aaaaaacaaaaa00000000000000000000000000000000000000000000000000000000000000000000000000
+1611616a66a67b77b7272272494494383383585585aaaaaaaaaaac00000000000000000000000000000000000000000000000000000000000000000000000000
+1611616a66a67b77b7272272494494383383585585aaaaaacaaaaa00000000000000000000000000000000000000000000000000000000000000000000000000
+1666616aaaa67bbbb7277772499994388883588885aaaaaaaaaaac00000000000000000000000000000000000000000000000000000000000000000000000000
+111111666666777777222222444444333333555555aaaaaacacaca00000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 01111006000000007000220000440000300005500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
