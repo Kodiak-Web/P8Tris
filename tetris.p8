@@ -264,6 +264,7 @@ function merge()   --sticks the controlled player piece onto the playing grid
 		end
 	end
 	line_detect()
+		piece_pointer = piece_table[bag[#bag]]
 	posx=5-ceil((#piece_pointer[rot_val][1])/2)
 	posy=-2
 	rot_val = 1
@@ -273,7 +274,6 @@ function merge()   --sticks the controlled player piece onto the playing grid
 			stop('you died',8)
 		end
 	end
-	piece_pointer = piece_table[bag[#bag]]
 end
 function line_detect() --finds filled lines, commits filled line genocide 
 	for k,v in pairs(collision_field) do
@@ -385,21 +385,11 @@ function btnd() -- hard drops don't need autorepeat.
 	return pressed
 end
 function hold()
-	debug_var = ""
-	if held_piece == -1 then
-		held_buf = {0,0}
-		held_piece = piece
-		del(bag,bag[#bag])
-		if #bag==0 then
-			bagjen()
-		end
-		piece_pointer = piece_table[bag[#bag]]
-	else
 	held_buf = {bag[#bag], held_piece}
 	bag[#bag] = held_buf[2]
 	held_piece = held_buf[1]
 	piece_pointer = piece_table[bag[#bag]]
-	end
+	if (bag[#bag]== -1) merge() -- merges empty table with play field. less buggy than previous attempts
 	--debug_var = piece .. held_buf .. held_piece
 	--end
 end
