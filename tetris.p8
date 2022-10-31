@@ -3,15 +3,20 @@ version 36
 __lua__
 poke(0x5f2e,1)
 kick_table = {
-	[1] = { {{1,0},{1,1},{0,-2},{1,-2}} , {{-1,0},{-1,1},{0,-2},{-1,-2}} },
-	[2] =  {{{1,0},{1,-1},{0,2},{1,2}}},
-	[4] = {{{-1,0},{-1,-1},{0,2},{-1,-2}}}
+	[1] = {{{1,0},{1,1},{0,-2},{1,-2}},{{-1,0},{-1,1},{0,-2},{-1,-2}}}, --first slot is rotation backwards, second slot is rotation forwards
+	[2] = {{{1,0},{1,-1},{0,2},{1,2}},{{1,0},{1,-1},{0,2},{1,2}}},
+	[3] = {{{-1,0},{-1,1},{0,-2},{-1,-2}},{{1,0},{1,1},{0,-2},{1,-2}}},
+	[4] = {{{-1,0},{-1,-1},{0,2},{-1,2}},{{-1,0},{-1,-1},{0,2},{-1,2}}}
 } --TODO: add the I kick table.
-kick_table[2][2] = kick_table[2][1]
-kick_table[3] = {kick_table[1][2],kick_table[1][1]}
-kick_table[4][2] = kick_table[4][1]
+
+kick_table_i = {
+	[1] = {{{-1,0},{2,0},{-1,2},{2,-1}},{{-2,0},{1,0},{-2,-1},{1,2}}},
+	[2] = {{{2,0},{-1,0},{2,1},{-1,-2}},{{-1,0},{2,0},{-1,2},{2,-1}}},
+	[3] = {{{1,0},{-2,0},{1,-2},{-2,1}},{{2,0},{-1,0},{2,1},{-1,-2}}},
+	[4] = {{{-2,0},{1,0},{-2,-1},{1,2}},{1,0},{-2, 0},{1,-2},{-2,1}}
+}
 held_piece = -1
-srs_i = { --credit to the tetris wiki for stolen SRS tables
+srs_i = { --credit to the tetris wiki for the tables
 	{{0,0,0,0},
 	 {1,1,1,1},
 	 {0,0,0,0},
@@ -207,47 +212,49 @@ end
 
 
 function rotate(n)
-	--	if piece == 0 then
-	--	 --I logic
-	--	else
-		not_rotated = true
-		tablerot = nil
-		if n == -1 then tablerot = 1
-		elseif n==1 then tablerot=2
+	not_rotated = true
+	tablerot = nil
+	if n == -1 then tablerot = 1
+	elseif n==1 then tablerot=2
+	end
+	coltimer -= flr(increments/1.5) --honestly forgot what this was for, i think its used for gravity? TODO: figure out why i did this and fix my shitty gravity implementation
+	
+	if coltest(0,0,n)==false then 
+		rot_val += n
+		if rot_val > 4 then
+			rot_val = 1
+		elseif rot_val < 1 then
+			rot_val = 4
 		end
-		coltimer -= flr(increments/1.5) --honestly forgot what this was for, i think its used for gravity? TODO: figure out why i did this and fix my shitty gravity implementation
-		if coltest(0,0,n)==false then 
-			rot_val += n
-			if rot_val > 4 then
-				rot_val = 1
-			elseif rot_val < 1 then
-				rot_val = 4
-			end
-		else
-			kick_test = 1
-			kicking = true
+	else
+		kick_test = 1
+		kicking = true
+		if piece_pointer == srs_i then
+			tablepoint = kick_table_i[rot_val][tablerot]
+		else 
 			tablepoint = kick_table[rot_val][tablerot]
-			while kicking do
-				collides = coltest(tablepoint[kick_test][1],(tablepoint[kick_test][2] * -1),n)
-				if collides == false then
-					rot_val += n
-					if rot_val > 4 then
-						rot_val = 1
-						elseif rot_val < 1 then
+		end
+		while kicking do
+			collides = coltest((tablepoint[kick_test][1]),(tablepoint[kick_test][2] * -1),n)
+			if collides == false then
+				rot_val += n
+				if rot_val > 4 then
+					rot_val = 1
+					elseif rot_val < 1 then
 						rot_val = 4
 					end
-					posx += tablepoint[kick_test][1]
-					posy += (tablepoint[kick_test][2] * -1) 
-					kicking = false
+				posx += tablepoint[kick_test][1]
+				posy += (tablepoint[kick_test][2] * -1) 
+				kicking = false
 				elseif kick_test < 4 then
-					kick_test +=1
+				kick_test +=1
 				else
-					kicking = false
-				end
+				kicking = false
 			end
 		end
+	end
 end
-------------------------------------------------
+		-----------------------------------------------
 
 function merge()   --sticks the controlled player piece onto the playing grid
 		del(bag,bag[#bag])
